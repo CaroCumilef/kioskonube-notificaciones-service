@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: kioskonube-notificaciones-service
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:rabbitmq}
+    port: 5672
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        acknowledge-mode: manual        # ACK manual: el consumidor confirma cada mensaje
+        prefetch: 5                     # máximo de mensajes sin confirmar por consumidor
+        default-requeue-rejected: false # un rechazo no vuelve a la cola: se va a la DLQ
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+server:
+  port: 8086
+
+# Nombres de mensajería centralizados (deben coincidir con lo creado por rabbit-admin-service)
+kioskonube:
+  mensajeria:
+    notificaciones:
+      exchange: notificaciones.exchange
+      queue: notificaciones.queue
+      routing-key: notificacion.enviar
+      dlx: notificaciones.queue.dlx
+      dlq: notificaciones.queue.dlq
+      dlq-routing-key: notificaciones.queue
+
+  notificaciones:
+    modo-envio: ${MAIL_MODE:simulado}   # simulado | smtp
+    remitente: ${MAIL_USERNAME:no-reply@kioskonube.cl}
+    reintentos:
+      max-intentos: 3
+      espera-ms: 2000
