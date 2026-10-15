@@ -5,8 +5,9 @@ import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
-import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -64,11 +65,17 @@ public class RabbitConfig {
                 .with(props.dlqRoutingKey());
     }
 
-    // ---- Serialización JSON de los mensajes ----
+    // ---- Envío de mensajes en JSON ----
 
+    /**
+     * Solo el RabbitTemplate (productor) usa JSON. Los consumidores reciben el Message crudo
+     * y lo convierten con su propio JsonMapper, así aceptan mensajes de cualquier microservicio
+     * sin depender del header __TypeId__ ni de clases de otros paquetes.
+     */
     @Bean
-    public MessageConverter jsonMessageConverter() {
-        // Solo se aceptan clases de nuestro paquete de mensajes (protección contra deserialización insegura)
-        return new JacksonJsonMessageConverter("cl.kioskonube.notificaciones.messaging");
+    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
+        RabbitTemplate template = new RabbitTemplate(connectionFactory);
+        template.setMessageConverter(new JacksonJsonMessageConverter());
+        return template;
     }
 }
