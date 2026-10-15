@@ -68,6 +68,7 @@ public class RabbitConfig {
 
     @Bean
     public MessageConverter jsonMessageConverter() {
-        return new JacksonJsonMessageConverter();
+        // Solo se aceptan clases de nuestro paquete de mensajes (protección contra deserialización insegura)
+        return new JacksonJsonMessageConverter("cl.kioskonube.notificaciones.messaging");
     }
 }
